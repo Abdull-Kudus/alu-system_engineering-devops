@@ -1,2 +1,2 @@
-Abdul Kudus
-ALU web_server
+web server
+ABDUL KUDUS
