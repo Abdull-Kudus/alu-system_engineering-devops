@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Bash script to install nginx web server & configure it
 
-# Update package list and install nginx
+# Update and install nginx
 apt-get update
 apt-get install -y nginx
 
-# Create HTML root folder (if it doesn't exist)
+# Ensure html folder exists
 mkdir -p /etc/nginx/html
 
-# Create index.html with correct content
+# Create the correct index.html page
 echo "Holberton School" > /etc/nginx/html/index.html
 
 # Configure nginx default site
