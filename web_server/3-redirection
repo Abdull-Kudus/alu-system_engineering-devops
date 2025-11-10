@@ -1,35 +1,29 @@
 #!/usr/bin/env bash
-# Bash script to install nginx and configure /redirect_me to redirect
+# Configure Nginx web server and add 301 redirect
 
 # Update packages and install nginx
-apt-get update
-apt-get install -y nginx
+sudo apt-get update
+sudo apt-get install -y nginx
 
-# Create html directory if it doesn't exist
-mkdir -p /etc/nginx/html
+# Create index.html
+sudo mkdir -p /etc/nginx/html
+echo "Holberton School for the win!" | sudo tee /etc/nginx/html/index.html
 
-# Create a default index.html
-echo "Holberton School for the win!" > /etc/nginx/html/index.html
-
-# Configure Nginx default site
-cat > /etc/nginx/sites-available/default <<EOF
+# Configure default server
+sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
 
     root /etc/nginx/html;
-    index index.html index.htm;
+    index index.html;
 
     location /redirect_me {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
-
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
 }
-EOF
+EOF'
 
 # Restart nginx without systemctl
-service nginx restart
+sudo service nginx restart
 
