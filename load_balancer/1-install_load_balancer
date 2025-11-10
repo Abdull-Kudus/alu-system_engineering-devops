@@ -9,7 +9,7 @@ apt-get install -y haproxy
 cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak 2>/dev/null || true
 
 # Configure HAProxy with roundrobin load balancing
-cat > /etc/haproxy/haproxy.cfg << 'EOF'
+cat > /etc/haproxy/haproxy.cfg <<'HAPROXY_CONFIG'
 global
     log /dev/log    local0
     log /dev/log    local1 notice
@@ -42,9 +42,9 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server 6782-web-01 52.207.254.138:80 check
-    server 6782-web-02 13.218.21.126:80 check
-EOF
+    server web-01 52.207.254.138:80 check
+    server web-02 13.218.21.126:80 check
+HAPROXY_CONFIG
 
 # Enable HAProxy to be started by init script
 echo "ENABLED=1" > /etc/default/haproxy
