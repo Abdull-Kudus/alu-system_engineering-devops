@@ -2,20 +2,22 @@
 # Installs and configures HAProxy with roundrobin load balancing for 2 web servers
 
 # Update and install HAProxy
-sudo apt-get update -y
-sudo apt-get install -y haproxy
-
-# Enable HAProxy at system startup
-sudo sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+apt-get update -y
+apt-get install -y haproxy
 
 # Backup default config
-sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
+cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak 2>/dev/null || true
 
-# Overwrite haproxy config with load balancing
-sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOF
+# Configure HAProxy with roundrobin load balancing
+cat > /etc/haproxy/haproxy.cfg << 'EOF'
 global
     log /dev/log    local0
     log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
     daemon
 
 defaults
@@ -26,6 +28,13 @@ defaults
     timeout connect 5000
     timeout client  50000
     timeout server  50000
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
 
 frontend http_front
     bind *:80
@@ -33,10 +42,15 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server web01 52.207.254.138:80 check
-    server web02 13.218.21.126:80 check
+    server 6782-web-01 52.207.254.138:80 check
+    server 6782-web-02 13.218.21.126:80 check
 EOF
 
-# Restart HAProxy
-sudo systemctl restart haproxy
+# Enable HAProxy to be started by init script
+echo "ENABLED=1" > /etc/default/haproxy
 
+# Restart HAProxy using service command
+service haproxy restart
+
+# Enable HAProxy to start on boot
+systemctl enable haproxy 2>/dev/null || update-rc.d haproxy defaults

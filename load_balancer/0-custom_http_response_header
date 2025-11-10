@@ -2,23 +2,58 @@
 # Configures a new Ubuntu machine to install nginx and set X-Served-By header
 
 # Update & install nginx
-sudo apt-get update -y
-sudo apt-get install -y nginx
+apt-get update -y
+apt-get install -y nginx
 
 # Start nginx service
-sudo systemctl enable nginx
-sudo systemctl start nginx
+service nginx start
 
 # Allow HTTP through firewall
-sudo ufw allow 'Nginx HTTP'
+ufw allow 'Nginx HTTP' 2>/dev/null || true
 
-# Create a simple index page
-echo "Hello World!" | sudo tee /var/www/html/index.html
+# Set ownership
+chown -R "$USER":"$USER" /var/www/html
+chmod -R 755 /var/www
 
-# Set X-Served-By header with hostname
-sudo sed -i '/server {/a \
-    add_header X-Served-By '"$(hostname)"';' /etc/nginx/sites-available/default
+# Create index page
+echo "Hello World!" > /var/www/html/index.html
+
+# Create custom 404 page (no trailing newline)
+printf "Ceci n'est pas une page" > /var/www/html/error_404.html
+
+# Backup default config
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bckp 2>/dev/null || true
+
+# Configure nginx - completely replace the config
+cat > /etc/nginx/sites-available/default << 'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    add_header X-Served-By $hostname;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+
+    error_page 404 /error_404.html;
+    location = /error_404.html {
+        root /var/www/html;
+    }
+}
+EOF
+
+# Test nginx configuration
+nginx -t
 
 # Restart nginx
-sudo systemctl restart nginx
-
+service nginx restart
