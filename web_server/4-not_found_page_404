@@ -20,8 +20,8 @@ chmod -R 755 /var/www
 # Create index page
 echo "Hello World!" > /var/www/html/index.html
 
-# Create custom 404 page
-echo "Ceci n'est pas une page" > /var/www/html/error_404.html
+# Create custom 404 page (no trailing newline)
+printf "Ceci n'est pas une page" > /var/www/html/error_404.html
 
 # Backup default config
 cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bckp 2>/dev/null || true
