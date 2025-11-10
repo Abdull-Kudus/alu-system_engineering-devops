@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # Installs and configures HAProxy with roundrobin load balancing for 2 web servers
 
-apt-get update -y
-apt-get install -y haproxy
+# Update and install HAProxy
+sudo apt-get update -y
+sudo apt-get install -y haproxy
 
 # Enable HAProxy at system startup
-sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+sudo sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
 
 # Backup default config
-cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
+sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
 
-# Overwrite haproxy config
-cat <<EOF > /etc/haproxy/haproxy.cfg
+# Overwrite haproxy config with load balancing
+sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOF
 global
     log /dev/log    local0
     log /dev/log    local1 notice
@@ -32,9 +33,10 @@ frontend http_front
 
 backend http_back
     balance roundrobin
-    server web01 3.93.38.36:80 check
-    server web02 34.229.92.111:80 check
+    server web01 52.207.254.138:80 check
+    server web02 13.218.21.126:80 check
 EOF
 
 # Restart HAProxy
-service haproxy restart
+sudo systemctl restart haproxy
+
