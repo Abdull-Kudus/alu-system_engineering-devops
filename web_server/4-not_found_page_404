@@ -1,46 +1,59 @@
 #!/usr/bin/env bash
-# Configures a new Ubuntu machine:
-# - Installs Nginx
-# - Serves Hello World at /
-# - Redirects /redirect_me permanently to a YouTube link
-# - Serves a custom 404 page containing "Ceci n'est pas une page"
+# Configures a new Ubuntu machine to redirect /redirect_me and have a custom 404 page
 
 set -e
 
-# Update and install nginx quietly
-apt-get update -y -qq
-apt-get install nginx -y -qq
+# Update and install nginx
+apt-get update -y
+apt-get install nginx -y
 
 # Start nginx service
 service nginx start
 
-# Allow Nginx through the firewall
-ufw allow 'Nginx HTTP' || true
+# Allow Nginx through firewall
+ufw allow 'Nginx HTTP' 2>/dev/null || true
 
-# Give the current user ownership to /var/www/html
+# Set ownership
 chown -R "$USER":"$USER" /var/www/html
 chmod -R 755 /var/www
 
-# Create the main index page
+# Create index page
 echo "Hello World!" > /var/www/html/index.html
 
-# Create the custom 404 page (overwrite if exists)
+# Create custom 404 page
 echo "Ceci n'est pas une page" > /var/www/html/error_404.html
 
-# Backup the default nginx config
-cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bckp
+# Backup default config
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bckp 2>/dev/null || true
 
-# Configure /redirect_me and 404 page
-sed -i '/server_name _;/a \
-    location /redirect_me {\
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\
-    }\
-    error_page 404 /error_404.html;\
-    location = /error_404.html {\
-        internal;\
-    }' /etc/nginx/sites-available/default
+# Configure nginx with redirect and custom 404
+cat > /etc/nginx/sites-available/default << 'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-# Reload nginx without systemctl
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+
+    error_page 404 /error_404.html;
+    location = /error_404.html {
+        root /var/www/html;
+    }
+}
+EOF
+
+# Test nginx configuration
+nginx -t
+
+# Restart nginx
 service nginx restart
-
-echo "Setup complete. Your custom 404 page contains Ceci n'est pas une page."
