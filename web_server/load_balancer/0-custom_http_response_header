@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Configures Nginx to add a custom HTTP header X-Served-By with the server hostname
+
+# Install nginx
+apt-get update -y
+apt-get install -y nginx
+
+# Get hostname
+HOSTNAME=$(hostname)
+
+# Add custom header inside the server block
+sed -i "/server_name _;/a \    add_header X-Served-By \"$HOSTNAME\";" /etc/nginx/sites-available/default
+
+# Restart nginx
+service nginx restart
