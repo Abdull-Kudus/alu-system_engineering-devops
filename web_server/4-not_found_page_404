@@ -24,7 +24,7 @@ chmod -R 755 /var/www
 # Create the main index page
 echo "Hello World!" > /var/www/html/index.html
 
-# Create the custom 404 page
+# Create the custom 404 page (overwrite if exists)
 echo "Ceci n'est pas une page" > /var/www/html/error_404.html
 
 # Backup the default nginx config
@@ -35,7 +35,10 @@ sed -i '/server_name _;/a \
     location /redirect_me {\
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;\
     }\
-    error_page 404 /error_404.html;' /etc/nginx/sites-available/default
+    error_page 404 /error_404.html;\
+    location = /error_404.html {\
+        internal;\
+    }' /etc/nginx/sites-available/default
 
 # Reload nginx without systemctl
 service nginx restart
