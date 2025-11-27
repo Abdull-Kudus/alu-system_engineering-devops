@@ -1,12 +1,5 @@
-# This Puppet manifest increases the ULIMIT for Nginx to handle high traffic
-
-exec { 'increase_ulimit_for_nginx':
-  command => '/bin/sed -i "s/ULIMIT=\\"-n 15\\"/ULIMIT=\\"-n 4096\\"/" /etc/default/nginx',
-  onlyif  => '/bin/grep -q "ULIMIT=\\"-n 15\\"" /etc/default/nginx',
-  notify  => Service['nginx'],
+# This Puppet manifest fixes Nginx to handle high traffic by increasing worker connections
+exec { 'fix--for-nginx':
+  command => 'sed -i "s/worker_connections 768;/worker_connections 4096;/" /etc/nginx/nginx.conf && service nginx restart',
+  path    => ['/bin', '/usr/bin', '/usr/sbin'],
 }
-
-service { 'nginx':
-  ensure => running,
-}
-
