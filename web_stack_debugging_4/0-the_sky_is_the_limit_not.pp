@@ -1,13 +1,12 @@
-# Increases the amount of traffic an Nginx server can handle
+# This Puppet manifest increases the ULIMIT for Nginx to handle high traffic
 
-# Increase the ULIMIT of the default file
-exec { 'fix--for-nginx':
-  command => 'sed -i "s/15/4096/" /etc/default/nginx',
-  path    => '/usr/local/bin/:/bin/'
+exec { 'increase_ulimit_for_nginx':
+  command => '/bin/sed -i "s/ULIMIT=\\"-n 15\\"/ULIMIT=\\"-n 4096\\"/" /etc/default/nginx',
+  onlyif  => '/bin/grep -q "ULIMIT=\\"-n 15\\"" /etc/default/nginx',
+  notify  => Service['nginx'],
 }
 
-# Restart Nginx
--> exec { 'nginx-restart':
-  command => 'service nginx restart',
-  path    => '/etc/init.d/'
+service { 'nginx':
+  ensure => running,
 }
+
