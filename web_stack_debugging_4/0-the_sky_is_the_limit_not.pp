@@ -1,5 +1,5 @@
-# This Puppet manifest fixes Nginx to handle high traffic by increasing worker connections
+# This Puppet manifest fixes Nginx to handle high traffic by increasing worker limits
 exec { 'fix--for-nginx':
-  command => 'sed -i "s/worker_connections 768;/worker_connections 4096;/" /etc/nginx/nginx.conf && service nginx restart',
+  command => 'sed -i "s/worker_connections 768/worker_connections 4096/" /etc/nginx/nginx.conf && (grep -q "worker_rlimit_nofile" /etc/nginx/nginx.conf || sed -i "/worker_processes/a worker_rlimit_nofile 8192;" /etc/nginx/nginx.conf) && service nginx restart && sleep 2',
   path    => ['/bin', '/usr/bin', '/usr/sbin'],
 }
